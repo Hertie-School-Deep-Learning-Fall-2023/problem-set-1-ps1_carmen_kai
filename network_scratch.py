@@ -55,7 +55,22 @@ class NeuralNetwork():
         TODO: Implement the forward propagation algorithm.
         The method should return the output of the network.
         '''
-        pass
+        #code goes here
+        #input for the first layer
+        self.A[0] = x_train
+        #forward propagation for hidden layers
+        for layer in range(1, len(self.layer_shapes)-1):
+            #compute weighted sum (Z) for current layer
+            self.Z[layer-1] = np.dot(self.A[layer-1], self.weights[layer-1].T)
+            # activation function to get the output of layer
+            self.A[layer] = self.activation_func(self.Z[layer-1]) 
+        #output layer
+        out_layer = len(self.layer_shapes)-1
+        self.Z[out_layer-1] = np.dot(self.A[out_layer-1], self.weights[out_layer-1].T)
+        self.A[out_layer] = self.output_func(self.Z[out_layer-1])
+
+        return self.A[out_layer]
+        #code ends here
 
 
 
@@ -63,18 +78,37 @@ class NeuralNetwork():
         '''
         TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
         The method should return a list of the weight gradients which are used to update the weights in self._update_weights().
-
         '''
-        pass 
+        #code starts here
+        #list to store gradients
+        grads = [np.zeros_like(w) for w in self.weights]
+        #error at output layer
+        error = output - y_train
+        #gradient for the output layer weights
+        out_layer = len(self.layer_shapes) - 1
+        grads[out_layer - 1] = np.dot(error.T, self.A[out_layer - 1])
+        # backward pass in the hidden layers
+        for layer in range(out_layer-2,-1,-1):
+            #get error for hidden layer
+            error_hl = np.dot(error, self.weights[layer+1]) * self.activation_func_deriv(self.Z[layer])
+            #get gradient for weights
+            grads[layer] = np.dot(error_hl.T, self.A[layer])
+            #update error for the next iteration
+            error = error_hl
+
+        return grads
+        #code ends here 
     
 
 
     def _update_weights(self,weight_gradients):
         '''
         TODO: Update the network weights according to stochastic gradient descent.
-
         '''
-        pass
+        #code starts here
+        for layer in range(len(self.weights)):
+            self.weights[layer] -= self.learning_rate * weight_gradients[layer]
+        #code ends here
 
 
 
@@ -106,7 +140,14 @@ class NeuralNetwork():
         TODO: Implement the prediction making of the network.
         The method should return the index of the most likeliest output class.
         '''
-        pass
+        # code starts here
+        #run the forward pass through the network
+        output = self._forward_pass(x)
+        #find the index of the neuron with the highest activation in the output layer
+        predict_index = np.argumax(output)
+
+        return predict_index
+        #code ends here
 
 
 
