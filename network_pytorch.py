@@ -7,6 +7,14 @@ import torch.optim as optim
 
 class NeuralNetworkTorch(nn.Module):
     def __init__(self, sizes, epochs=10, learning_rate=0.01, random_state=1):
+       
+        super().__init__()
+
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        self.random_state = random_state   
+        torch.manual_seed(self.random_state)
+
         '''
         TODO: Implement the forward propagation algorithm.
         The layers should be initialized according to the sizes variable.
@@ -14,13 +22,9 @@ class NeuralNetworkTorch(nn.Module):
         the implementation in network_pytorch: sizes[i] is the shape 
         of the input that gets multiplied to the weights for the layer.
         '''
-        
-        super().__init__()
-
-        self.epochs = epochs
-        self.learning_rate = learning_rate
-        self.random_state = random_state   
-        torch.manual_seed(self.random_state)
+        self.layers = nn.ModuleList()
+        for i in range(len(sizes) - 1):
+            self.layers.append(nn.Linear(sizes[i], sizes[i + 1]))
 
         self.activation_func = torch.sigmoid
         self.output_func = torch.softmax
@@ -32,7 +36,9 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: The method should return the output of the network.
         '''
-        pass
+        for layer in self.layers[:-1]:
+            x_train = self.activation_func(layer(x_train))
+        return self.layers[-1](x_train)
 
 
 
@@ -40,7 +46,9 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
         '''
-        pass
+        loss = self.loss_func(output, y_train.float())
+        loss.backward()
+
 
 
 
@@ -48,7 +56,7 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: Update the network weights according to stochastic gradient descent.
         '''
-        pass
+        self.optimizer.step()
 
 
     def _flatten(self, x):
@@ -73,7 +81,9 @@ class NeuralNetworkTorch(nn.Module):
         TODO: Implement the prediction making of the network.
         The method should return the index of the most likeliest output class.
         '''
-        pass
+        x = self._flatten(x)
+        output = self._forward_pass(x)
+        return torch.argmax(output, axis=1)
 
 
 
