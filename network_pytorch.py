@@ -1,3 +1,7 @@
+## This version is the solution where we adapted the BCEWithLogitsLoss function which is for binary classification
+# to the CrossEntropyLoss() function which is for multi-class classification tasks and probably the function
+# that you intended to use given the description in the Problem Set and the fact that you specificed an output_func
+
 import time
 
 import torch
@@ -27,8 +31,10 @@ class NeuralNetworkTorch(nn.Module):
             self.layers.append(nn.Linear(sizes[i], sizes[i + 1]))
 
         self.activation_func = torch.sigmoid
-        self.output_func = torch.softmax
-        self.loss_func = nn.BCEWithLogitsLoss()
+        # No need to specify an activation function for the ouput layer given 
+        # nn.CrossEntropyLoss applies softmax internally.
+        #self.output_func = torch.softmax 
+        self.loss_func = nn.CrossEntropyLoss()
         self.optimizer = optim.SGD(self.parameters(), lr=learning_rate)
 
         
@@ -42,11 +48,12 @@ class NeuralNetworkTorch(nn.Module):
 
 
 
+
     def _backward_pass(self, y_train, output):
         '''
         TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
         '''
-        loss = self.loss_func(output, y_train.float())
+        loss = self.loss_func(output, y_train)  # Assuming y_train is of type torch.long
         loss.backward()
 
 
@@ -83,7 +90,7 @@ class NeuralNetworkTorch(nn.Module):
         '''
         x = self._flatten(x)
         output = self._forward_pass(x)
-        return torch.argmax(output, axis=1)
+        return torch.argmax(output, dim=1)
 
 
 
@@ -94,9 +101,8 @@ class NeuralNetworkTorch(nn.Module):
         for iteration in range(self.epochs): 
             for x, y in train_loader:
                 x = self._flatten(x)
-                y = nn.functional.one_hot(y, 10)
+                #y = nn.functional.one_hot(y, 10)
                 self.optimizer.zero_grad()
-
 
                 output = self._forward_pass(x) 
                 self._backward_pass(y, output)
